@@ -1,4 +1,3 @@
-// Import the functions you need from the SDKs you need
 import fs from 'fs'
 import https from 'https'
 import archiver from 'archiver'
@@ -6,11 +5,11 @@ import moment from 'moment'
 import rimraf from 'rimraf'
 import admin from './common.js'
 
+/*
+ * Initialize Firestore
+ */
 const db = admin.firestore()
 
-/*
- * Backup
- */
 const backupFolder = 'backups'
 const filesFolder = '__files'
 const dataFilename = '__data.json'
@@ -18,14 +17,22 @@ const dataFilename = '__data.json'
 if (!fs.existsSync(backupFolder)) {
     fs.mkdirSync(backupFolder)
 }
+
+/*
+ * Backup
+ */
+
 await readCollections(await db.listCollections(), backupFolder)
 
+// Zipping
 const zipName = `${backupFolder}_${moment().format('YYYYMMDD_HHmmss')}.zip`
 const output = fs.createWriteStream(zipName)
 const zip = archiver('zip', {})
 zip.pipe(output)
 zip.directory(backupFolder, false)
 await zip.finalize()
+
+// Delete Temp Folder
 if (fs.existsSync(zipName)) {
     await rimraf(backupFolder, {}, () => {
     })
@@ -34,7 +41,6 @@ if (fs.existsSync(zipName)) {
 /*
  * Functions
  */
-
 async function readCollections(collections, folder) {
     for (const collection of collections) {
         const collectionFolder = `${folder}/${collection.id}`

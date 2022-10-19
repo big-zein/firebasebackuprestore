@@ -1,4 +1,3 @@
-// Import the functions you need from the SDKs you need
 import fs from 'fs'
 import admin from './common.js'
 import {fileURLToPath} from 'url'
@@ -6,6 +5,9 @@ import path from 'path'
 import {v4} from 'uuid'
 import extract from "extract-zip";
 
+/*
+ * Initialize Firestore and Storage
+ */
 const db = admin.firestore()
 const storage = admin.storage()
 
@@ -13,24 +15,26 @@ const credentials = JSON.parse(fs.readFileSync('./credentials.json', 'utf8'))
 const bucketName = credentials.storage_bucket_name
 const bucket = storage.bucket(`gs://${bucketName}`)
 
-/*
- * Backup
- */
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const backupFolder = 'backups'
 const filesFolder = '__files'
 const dataFilename = '__data.json'
-
 if (!fs.existsSync(backupFolder)) {
     fs.mkdirSync(backupFolder)
 }
 
+/*
+ * Restore
+ */
+
 const zipName = process.argv[2]
 await extract(zipName, {dir: `${__dirname}/${backupFolder}`})
-
 await writeCollections(backupFolder)
 
+/*
+ * Functions
+ */
 async function writeCollections(folder, path = '') {
     const collections = fs.readdirSync(folder)
     for (const collection of collections) {
